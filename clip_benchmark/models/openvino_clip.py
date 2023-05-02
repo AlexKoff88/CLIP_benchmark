@@ -42,16 +42,22 @@ class OpenVINOCLIP():
         
     def _compile_models(self):
         core = ov.Core()
+        print("read image_encoder")
         image_encoder = core.read_model(Path(self.model_folder) / self.IMAGE_ENCODER_MODEL)
-        self.image_encoder = core.compile_model(image_encoder, device_name=self.device)
+        print("compile image_encoder")
+        self.image_encoder = core.compile_model(image_encoder, self.device)
+        print("Compiled")
         
+        print("read text_encoder")
         text_encoder = core.read_model(Path(self.model_folder) / self.TEXT_ENCODER_MODEL)
-        self.text_encoder = core.compile_model(text_encoder, device_name=self.device)
+        print("compile text_encoder")
+        self.text_encoder = ov.compile_model(text_encoder, self.device)
+        print("Compiled")
         
         
     def encode_image(self, image, normalize: bool = False):
-        features = self.image_encoder(image)[0]
-        features = torch.from_numpy(features)
+        features = self.image_encoder(image)
+        features = torch.from_numpy(features[self.image_encoder.output()])
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
@@ -60,8 +66,8 @@ class OpenVINOCLIP():
         x = x + self.positional_embedding
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = torch.asarray(x).contiguous()
-        x = self.text_encoder((x, self.attn_mask))[0]
-        x = torch.from_numpy(x)
+        x = self.text_encoder((x, self.attn_mask))
+        x = torch.from_numpy(x[self.text_encoder.output()])
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x)  # [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
