@@ -42,18 +42,11 @@ class OpenVINOCLIP():
         
     def _compile_models(self):
         core = ov.Core()
-        print("read image_encoder")
         image_encoder = core.read_model(Path(self.model_folder) / self.IMAGE_ENCODER_MODEL)
-        print("compile image_encoder")
         self.image_encoder = core.compile_model(image_encoder, self.device)
-        print("Compiled")
         
-        print("read text_encoder")
         text_encoder = core.read_model(Path(self.model_folder) / self.TEXT_ENCODER_MODEL)
-        print("compile text_encoder")
-        self.text_encoder = ov.compile_model(text_encoder, self.device)
-        print("Compiled")
-        
+        self.text_encoder = core.compile_model(text_encoder, self.device)        
         
     def encode_image(self, image, normalize: bool = False):
         features = self.image_encoder(image)
