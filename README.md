@@ -37,19 +37,16 @@ to get the list of datasets
 wget https://raw.githubusercontent.com/LAION-AI/CLIP_benchmark/main/benchmark/webdatasets.txt
 ```
 
-- Run with OpenVINO:
-  - Prepare models in the folder:
-    - "image_encoder.xml/bin"
-    - "text_encoder.xml/bin"
-    - "model_index.txt" (example of the content: "ViT-B-16-plus-240,laion400m_e32")
-  - "models.txt" should contain the path instead of model name (e.g. "../open_clip/tutorials/openvino_fp32,laion400m_e32")
+- **Run with OpenVINO**:
+  - Prepare models using tutorials from the [OpenCLIP fork for OpenVINO](https://github.com/AlexKoff88/open_clip/tree/openvino_alt/tutorials/openvino). It should create folders with openvino models, e.g. `openvino_fp32`
+  - Prepare "models.txt" that should contain the path instead of model name (e.g. "../open_clip/tutorials/openvino_fp32,laion400m_e32")
   - Run the command:
 ```
 CUDA_VISIBLE_DEVICES="" clip_benchmark eval --pretrained_model models.txt --model_type="openvino_clip"   --dataset "webdatasets.txt" \
 --dataset_root "https://huggingface.co/datasets/clip-benchmark/wds_{dataset_cleaned}/tree/main" --output "benchmark_{dataset}_openvino_{language}_{task}.json"
 ```
 
-- Run with PyTorch: 
+- **Run with PyTorch**: 
 ```
 clip_benchmark eval --pretrained_model models.txt \
     --dataset "webdatasets.txt" \
