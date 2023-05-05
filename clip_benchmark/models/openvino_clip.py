@@ -50,21 +50,12 @@ class OpenVINOCLIP():
         
     def encode_image(self, image, normalize: bool = False):
         features = self.image_encoder(image)
-        features = torch.from_numpy(features[self.image_encoder.output()])
+        features = torch.from_numpy(features[0])
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
-        x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
-
-        x = x + self.positional_embedding
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = torch.asarray(x).contiguous()
-        x = self.text_encoder((x, self.attn_mask))
-        x = torch.from_numpy(x[self.text_encoder.output()])
-        x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.ln_final(x)  # [batch_size, n_ctx, transformer.width]
-        # take features from the eot embedding (eot_token is the highest number in each sequence)
-        x = x[np.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
+        x = self.text_encoder(text)
+        x = torch.from_numpy(x[0])
         return F.normalize(x, dim=-1) if normalize else x
 
     def __call__(self, image, text):
