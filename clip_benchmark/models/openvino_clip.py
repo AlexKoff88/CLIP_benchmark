@@ -61,13 +61,7 @@ class OpenVINOCLIP():
     def __call__(self, image, text):
         image_features = self.encode_image(image, normalize=True)
         text_features = self.encode_text(text, normalize=True)
-        if self.output_dict:
-            return {
-                "image_features": image_features,
-                "text_features": text_features,
-                "logit_scale": self.logit_scale.exp()
-            }
-        return image_features, text_features, self.logit_scale.exp()
+        return image_features, text_features, None
     
     def eval(self):
         pass
