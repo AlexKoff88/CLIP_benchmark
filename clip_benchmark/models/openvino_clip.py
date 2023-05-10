@@ -16,7 +16,7 @@ def ln(x, b, s):
 class OpenVINOCLIP():
     IMAGE_ENCODER_MODEL = "image_encoder.xml"
     TEXT_ENCODER_MODEL = "text_encoder.xml"
-    
+
     def __init__(
                 self, 
                 model_folder,
@@ -37,35 +37,50 @@ class OpenVINOCLIP():
         self.text_projection = text_projection
         self.cache_dir = cache_dir
         self.device = device
-        
+
         self._compile_models()
-        
+
     def _compile_models(self):
         core = ov.Core()
         image_encoder = core.read_model(Path(self.model_folder) / self.IMAGE_ENCODER_MODEL)
+        shapes = {}
+        for input_layer in image_encoder.inputs:
+            shapes[input_layer] = input_layer.partial_shape
+            shapes[input_layer][0] = -1
+            shapes[input_layer][1] = 3
+            shapes[input_layer][2] = 240
+            shapes[input_layer][3] = 240
+        image_encoder.reshape(shapes)
         self.image_encoder = core.compile_model(image_encoder, self.device)
-        
+
         text_encoder = core.read_model(Path(self.model_folder) / self.TEXT_ENCODER_MODEL)
+        shapes = {}
+        for input_layer in text_encoder.inputs:
+            shapes[input_layer] = input_layer.partial_shape
+            shapes[input_layer][0] = -1
+            shapes[input_layer][1] = 77
+        text_encoder.reshape(shapes)
+
         self.text_encoder = core.compile_model(text_encoder, self.device)        
-        
+
     def encode_image(self, image, normalize: bool = False):
         features = self.image_encoder(image)
-        features = torch.from_numpy(features[0])
+        features = torch.from_numpy(next(iter(features.values())))
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
         x = self.text_encoder(text)
-        x = torch.from_numpy(x[0])
+        x = torch.from_numpy(next(iter(x.values())))
         return F.normalize(x, dim=-1) if normalize else x
 
     def __call__(self, image, text):
         image_features = self.encode_image(image, normalize=True)
         text_features = self.encode_text(text, normalize=True)
         return image_features, text_features, None
-    
+
     def eval(self):
         pass
-        
+
     def to(self, device):
         self.device = device # TODO recompilation
 
@@ -86,10 +101,10 @@ def load_openvino_clip(model_name: str, pretrained: str = "laion400m_e32", cache
         lines = [line.rstrip() for line in file]
         orig_model_name, pretrained = lines[0].split(",")
         print(f"model {orig_model_name} with pretrained {pretrained}")
-    
+
     torch_model, _, transform = open_clip.create_model_and_transforms(orig_model_name, pretrained=pretrained, cache_dir=cache_dir)
     tokenizer = open_clip.get_tokenizer(orig_model_name)
-    
+
     model = OpenVINOCLIP(
                         model_name, 
                         tokenizer, 
@@ -101,5 +116,5 @@ def load_openvino_clip(model_name: str, pretrained: str = "laion400m_e32", cache
                         cache_dir=cache_dir, 
                         device=device.upper() if device == "cpu" else "GPU"
             )
-    
+
     return model, transform, tokenizer
