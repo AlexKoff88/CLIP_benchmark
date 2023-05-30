@@ -110,7 +110,7 @@ def run_classification(model, classifier, dataloader, device, amp=True):
                 image_features = model.encode_image(images)
                 image_features = F.normalize(image_features, dim=-1)
                 logits = 100. * image_features @ classifier
-            
+
             true.append(target.cpu())
             pred.append(logits.float().cpu())
 

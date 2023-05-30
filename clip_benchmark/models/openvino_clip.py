@@ -50,12 +50,12 @@ class OpenVINOCLIP():
         
     def encode_image(self, image, normalize: bool = False):
         features = self.image_encoder(image)
-        features = torch.from_numpy(features[0])
+        features = torch.from_numpy(features[next(iter(features))])
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
         x = self.text_encoder(text)
-        x = torch.from_numpy(x[0])
+        x = torch.from_numpy(x[next(iter(x))])
         return F.normalize(x, dim=-1) if normalize else x
 
     def __call__(self, image, text):
