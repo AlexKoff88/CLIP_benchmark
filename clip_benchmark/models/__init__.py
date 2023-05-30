@@ -3,12 +3,14 @@ import torch
 from .open_clip import load_open_clip
 from .japanese_clip import load_japanese_clip
 from .openvino_clip import load_openvino_clip
+from .ovms_clip import load_ovms_clip
 
 # loading function must return (model, transform, tokenizer)
 TYPE2FUNC = {
     "open_clip": load_open_clip,
     "ja_clip": load_japanese_clip, 
     "openvino_clip": load_openvino_clip,
+    "ovms_clip": load_ovms_clip,
 }
 MODEL_TYPES = list(TYPE2FUNC.keys())
 
